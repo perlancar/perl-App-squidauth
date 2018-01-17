@@ -1,3 +1,5 @@
+## no critic: InputOutput::RequireBriefOpen
+
 package App::squidauth;
 
 # DATE
