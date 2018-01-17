@@ -43,7 +43,7 @@ _
 sub squidauth {
     require Crypt::PasswdMD5;
 
-    my %args;
+    my %args = @_;
 
     my $passwd_file = $args{passwd_file} // "/etc/proxypasswd";
     my $passwd_file_mtime = 0;
@@ -52,7 +52,7 @@ sub squidauth {
 
     my $code_read_passwd_file = sub {
         log_debug "Rereading password file '$passwd_file' ...";
-        open my $fh, "<", $auth_file
+        open my $fh, "<", $passwd_file
             or die "Can't open password file '$passwd_file': $!\n";
         $passwd_file_mtime = (-M $passwd_file);
         %passwords = ();
@@ -62,6 +62,7 @@ sub squidauth {
             $passwords{$user} = $pass;
         }
     };
+
     # returns 1 if password is correct
     my $code_cmp_pass = sub {
         my ($pass, $enc) = @_;
@@ -71,7 +72,7 @@ sub squidauth {
         if ($enc =~ /^\$apr1\$(.*?)\$/) {
             # apache MD5
             $salt = $1;
-            return Crypt::PasswdM5::apache_md5_crypt($pass, $salt) eq $enc;
+            return Crypt::PasswdMD5::apache_md5_crypt($pass, $salt) eq $enc;
         } else {
             # assume it's crypt()
             $salt = $enc;
@@ -81,6 +82,7 @@ sub squidauth {
 
     $code_read_passwd_file->();
 
+    $|++;
     while (<STDIN>) {
         $code_read_passwd_file->() if $passwd_file_mtime > (-M $passwd_file);
         chomp;
