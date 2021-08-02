@@ -2,3 +2,4 @@ App-squidauth-*
 .build
 *~
 nytprof*
+.DS_Store
